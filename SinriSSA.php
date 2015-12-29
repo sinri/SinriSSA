@@ -4,7 +4,7 @@
  * ===========================
  *   All Hail Sinri Edogawa!
  * ---------------------------
- *  Updated 2015 Nov 18 
+ *  Updated 2015 Dec 29
  *  Version Aleph [א]
  * ===========================
  *
@@ -13,7 +13,7 @@
  *  -e show one sample sql
  *  -E show all sample sqls
  *  -f determine the log file, non-optional
- *  -s determine the sort method, `ave_time` and `freq_sum` supported
+ *  -s determine the sort method, `min_time`, `ave_time` and `freq_sum` supported
  *  -t the number of sqls to be displayed by order after sorting, 10 for default, 0 for all
  *  -v sql average time range filter, such as `100,10000`, used as [100,10000)
  */
@@ -25,11 +25,11 @@ if(empty($opt)){
 if(isset($opt['h'])){
 	echo "SINRI Slow Sql log Analyzer Version Aleph [א]".PHP_EOL;
 	echo " *  # USAGE
- *  php SinriSSA.php [-eE] [-s SORT=ave_time] [-t TOP=10] -f FILE
+ *  php SinriSSA.php [-eE] [-s SORT=ave_time][-v MIN,MAX] [-t TOP=10] -f FILE
  *  -e show one sample sql
  *  -E show all sample sqls
  *  -f determine the log file, non-optional
- *  -s determine the sort method, `ave_time` and `freq_sum` supported
+ *  -s determine the sort method, `min_time`, `ave_time` and `freq_sum` supported
  *  -t the number of sqls to be displayed by order after sorting, 10 for default, 0 for all
  *  -v sql average time range filter, such as `100,10000`, used as [100,10000)";
 	echo PHP_EOL;
@@ -86,18 +86,21 @@ if ($handle) {
         if(strstr($line, '# Time:')!==false){
 			//echo "HERE TIME".PHP_EOL;
 			//# Time: 150803  6:07:06
-			saveit($slow,$index,$sql,$time);
+			saveit($slow,$index,$sql,$time,$min,$max);
 			$index+=1;
 			$sql="";
 			$time=0;
 		}elseif(strstr($line, '# User@Host:')!==false){
 			//echo "HERE USER".PHP_EOL;
 			//# User@Host: hbai[hbai] @  [192.168.0.21]
+			$sql="";
+			$time=0;
 		}elseif (strstr($line, '# Query_time:')!==false) {
 			//echo "HERE QUERY".PHP_EOL;
 			//# Query_time: 58  Lock_time: 0  Rows_sent: 0  Rows_examined: 541643
 			$ar=explode(' ', $line);
 			$time=$ar[2];
+			$sql="";
 		}else{
 			//echo "HERE SQL".PHP_EOL;
 			$sql.=$line;
@@ -109,7 +112,7 @@ if ($handle) {
     fclose($handle);
 }
 
-saveit($slow,$index,$sql,$time);
+saveit($slow,$index,$sql,$time,$min,$max);
 
 $time_end_reading_file=microtime(true);
 
@@ -137,6 +140,12 @@ foreach ($slow as $item) {
 		$type_group[$type_md5]['time_sum']+=$time;
 		$type_group[$type_md5]['freq_sum']+=1;
 		$type_group[$type_md5]['samples'][]=$sql;
+		if($type_group[$type_md5]['min_time']>$time){
+			$type_group[$type_md5]['min_time']=$time;
+		}
+		if($type_group[$type_md5]['max_time']<$time){
+			$type_group[$type_md5]['max_time']=$time;
+		}
 	}else{
 		$type_group[$type_md5]=array(
 			'time_sum'=>$time,
@@ -144,6 +153,8 @@ foreach ($slow as $item) {
 			'samples'=>array($sql),
 			'sql'=>$n_sql,
 			'type_md5'=>$type_md5,
+			'min_time'=>$time,
+			'max_time'=>$time,
 		);
 	}
 }
@@ -155,7 +166,10 @@ if($opt['s']=='ave_time'){
 	usort($type_group, 'cmp_ave_time');
 }elseif ($opt['s']=='freq_sum') {
 	usort($type_group, 'cmp_freq_sum');
-}else{
+}elseif ($opt['s']=='min_time') {
+	usort($type_group, 'cmp_min_time');
+}
+else{
 	die ('PARAMETER [s] ONLY ave_time or freq_sum'.PHP_EOL);
 }
 
@@ -164,6 +178,7 @@ foreach ($type_group as $no => $item) {
 	if($opt['t']>0 && $opt['t']>=$i){
 		echo "# ".$i.' TYPE MD5: '.$item['type_md5'].PHP_EOL;
 		echo "AVE TIME: ".($item['freq_sum']==0?0:($item['time_sum']/$item['freq_sum']))." second ".PHP_EOL;
+		echo "MIN TIME: ".$item['min_time']." s; MAX TIME: ".$item['max_time']." s;";
 		echo "FREQUENCY: ".$item['freq_sum'].PHP_EOL;
 		echo "NORMALIZED SQL: ".PHP_EOL;
 		echo $item['sql'].PHP_EOL;
@@ -192,7 +207,8 @@ echo "ANALYZE DONE IN ".($time_end_analyzing-$time_end_reading_file).' SECONDS'.
 // FUNCTIONS
 
 function normalizeSQL($sql){
-	$sql=preg_replace("/(\\'[^\\']+\\')/", '@', $sql);
+	$sql=preg_replace("/= *\d+ *;/", '=@;', $sql);
+	$sql=preg_replace("/(\\'[^\\']*\\')/", '@', $sql);
 	$sql=preg_replace("/(?<=[\s\=\(,])[\-]?[\\d]+(?=[\s\=\),])/", '#', $sql);
 	$sql=preg_replace("/ *@ */", '@', $sql);
 	$sql=preg_replace("/ *# */", '#', $sql);
@@ -230,5 +246,13 @@ function cmp_ave_time($a,$b){
     return ($a_at < $b_at) ? 1 : -1;
 }
 
+function cmp_min_time($a,$b){
+	$a_at=$a['min_time'];
+	$b_at=$b['min_time'];
 
-?>
+	if ($a_at == $b_at) {
+        return 0;
+    }
+    return ($a_at < $b_at) ? 1 : -1;
+}
+
