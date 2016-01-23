@@ -160,7 +160,7 @@ foreach ($slow as $item) {
 			'type_md5'=>$type_md5,
 			'min_time'=>$time,
 			'max_time'=>$time,
-			'who'=array($who=>$who),
+			'who'=>array($who=>$who),
 		);
 	}
 }
