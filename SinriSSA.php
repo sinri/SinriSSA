@@ -207,15 +207,24 @@ echo "ANALYZE DONE IN ".($time_end_analyzing-$time_end_reading_file).' SECONDS'.
 // FUNCTIONS
 
 function normalizeSQL($sql){
-	$sql=preg_replace("/= *\d+ *;/", '=@;', $sql);
-	$sql=preg_replace("/(\\'[^\\']*\\')/", '@', $sql);
-	$sql=preg_replace("/(?<=[\s\=\(,])[\-]?[\\d]+(?=[\s\=\),])/", '#', $sql);
-	$sql=preg_replace("/ *@ */", '@', $sql);
-	$sql=preg_replace("/ *# */", '#', $sql);
-	$sql=preg_replace("/[#@](,[#@])+/", '~', $sql);
-	$sql=preg_replace("/\-\-/", ' --', $sql);
-	$sql=preg_replace("/ *# */", ' # ', $sql);
-	$sql=preg_replace("/ *@ */", ' @ ', $sql);
+	$normalizer_version=2;
+	// Normalizer Verion I: deprecated for Segmentation Fault Issue
+	if($normalizer_version==1){
+		$sql=preg_replace("/= *\d+ *;/", '=@;', $sql);
+		$sql=preg_replace("/(\\'[^\\']*\\')/", '@', $sql);
+		$sql=preg_replace("/(?<=[\s\=\(,])[\-]?[\\d]+(?=[\s\=\),])/", '#', $sql);
+		$sql=preg_replace("/ *@ */", '@', $sql);
+		$sql=preg_replace("/ *# */", '#', $sql);
+		$sql=preg_replace("/[#@](,[#@])+/", '~', $sql);
+		$sql=preg_replace("/\-\-/", ' --', $sql);
+		$sql=preg_replace("/ *# */", ' # ', $sql);
+		$sql=preg_replace("/ *@ */", ' @ ', $sql);
+	}
+	elseif($normalizer_version==2){
+		$sql=preg_replace('/(?<=[\s\=\(])(\d+)(?=[\s,;\)])/', '@', $sql);
+		$sql=preg_replace('/\'(([^\\\']|(\\.))*)\'/', '#', $sql);
+		$sql=preg_replace('/\([\s,#@]+\)/', '(~)', $sql);
+	}
 	return $sql;
 }
 
