@@ -4,8 +4,8 @@
  * ===========================
  *   All Hail Sinri Edogawa!
  * ---------------------------
- *  Updated 2015 Dec 29
- *  Version Aleph [א]
+ *  Updated 2016 Jan 23
+ *  Version Bet [ב]
  * ===========================
  *
  *  # USAGE
@@ -15,7 +15,7 @@
  *  -f determine the log file, non-optional
  *  -s determine the sort method, `min_time`, `ave_time` and `freq_sum` supported
  *  -t the number of sqls to be displayed by order after sorting, 10 for default, 0 for all
- *  -v sql average time range filter, such as `100,10000`, used as [100,10000)
+ *  -v sql average time range filter, such as `50,10000`, used as [50,10000)
  */
 $opt=getopt('heEs:t:f:v:');
 // print_r($opt);die();
@@ -31,7 +31,7 @@ if(isset($opt['h'])){
  *  -f determine the log file, non-optional
  *  -s determine the sort method, `min_time`, `ave_time` and `freq_sum` supported
  *  -t the number of sqls to be displayed by order after sorting, 10 for default, 0 for all
- *  -v sql average time range filter, such as `100,10000`, used as [100,10000)";
+ *  -v sql average time range filter, such as `50,10000`, used as [50,10000)";
 	echo PHP_EOL;
 	die();
 }
@@ -56,13 +56,13 @@ if(isset($opt['v'])){
 	if(count($mm)==2){
 		$min=intval($mm[0]);
 		$max=intval($mm[1]);
-		echo "NOTICE: have changed min and max to [$min,$max)".PHP_EOL;
+		echo "Notice: Time range has been changed to [$min,$max) as [min,max)".PHP_EOL;
 	}
 }
 if(!isset($min) or !isset($max)){
-	$min=100;
+	$min=50;
 	$max=10000;
-	echo "WARNING: have changed min and max to [$min,$max)".PHP_EOL;
+	echo "Notice: Time range has been changed to [$min,$max) as [min,max)".PHP_EOL;
 }
 
 if(empty($opt['f'])){
