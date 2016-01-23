@@ -78,6 +78,7 @@ $slow=array();
 $index=-1;
 $sql="";
 $time=0;
+$who="";
 
 $handle = @fopen($file, "r");
 if ($handle) {
@@ -86,15 +87,17 @@ if ($handle) {
         if(strstr($line, '# Time:')!==false){
 			//echo "HERE TIME".PHP_EOL;
 			//# Time: 150803  6:07:06
-			saveit($slow,$index,$sql,$time,$min,$max);
+			saveit($slow,$index,$sql,$who,$time,$min,$max);
 			$index+=1;
 			$sql="";
 			$time=0;
+			$who="";
 		}elseif(strstr($line, '# User@Host:')!==false){
 			//echo "HERE USER".PHP_EOL;
 			//# User@Host: hbai[hbai] @  [192.168.0.21]
 			$sql="";
 			$time=0;
+			$who=$line;
 		}elseif (strstr($line, '# Query_time:')!==false) {
 			//echo "HERE QUERY".PHP_EOL;
 			//# Query_time: 58  Lock_time: 0  Rows_sent: 0  Rows_examined: 541643
@@ -112,7 +115,7 @@ if ($handle) {
     fclose($handle);
 }
 
-saveit($slow,$index,$sql,$time,$min,$max);
+saveit($slow,$index,$sql,$who,$time,$min,$max);
 
 $time_end_reading_file=microtime(true);
 
@@ -135,6 +138,7 @@ foreach ($slow as $item) {
 	$sql=$item['sql'];
 	$n_sql=$item['n_sql'];
 	$type_md5=$item['type_md5'];
+	$who=$item['who'];
 
 	if(isset($type_group[$type_md5])){
 		$type_group[$type_md5]['time_sum']+=$time;
@@ -146,6 +150,7 @@ foreach ($slow as $item) {
 		if($type_group[$type_md5]['max_time']<$time){
 			$type_group[$type_md5]['max_time']=$time;
 		}
+		$type_group[$type_md5]['who'][$who]=$who;
 	}else{
 		$type_group[$type_md5]=array(
 			'time_sum'=>$time,
@@ -155,6 +160,7 @@ foreach ($slow as $item) {
 			'type_md5'=>$type_md5,
 			'min_time'=>$time,
 			'max_time'=>$time,
+			'who'=array($who=>$who),
 		);
 	}
 }
@@ -180,6 +186,7 @@ foreach ($type_group as $no => $item) {
 		echo "AVE TIME: ".($item['freq_sum']==0?0:($item['time_sum']/$item['freq_sum']))." second ".PHP_EOL;
 		echo "MIN TIME: ".$item['min_time']." s; MAX TIME: ".$item['max_time']." s;";
 		echo "FREQUENCY: ".$item['freq_sum'].PHP_EOL;
+		echo "CALLED BY: ".PHP_EOL.implode(PHP_EOL, $item['who']).PHP_EOL;
 		echo "NORMALIZED SQL: ".PHP_EOL;
 		echo $item['sql'].PHP_EOL;
 		if(isset($opt['e'])){
@@ -228,12 +235,12 @@ function normalizeSQL($sql){
 	return $sql;
 }
 
-function saveit(&$array,$index,$sql,$time,$min=100,$max=10000){
+function saveit(&$array,$index,$sql,$who,$time,$min=100,$max=10000){
 	if($index>=0){
 		//if existed
 		if($time>=$min && $time<$max){
 			$n_sql=normalizeSQL($sql);
-			$array[]=array('time'=>$time,'sql'=>$sql,'n_sql'=>$n_sql,'type_md5'=>md5($n_sql));
+			$array[]=array('time'=>$time,'sql'=>$sql,'n_sql'=>$n_sql,'type_md5'=>md5($n_sql),'who'=>$who);
 		}
 	}
 }
