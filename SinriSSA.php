@@ -214,7 +214,7 @@ echo PHP_EOL;
 
 echo "ANALYZE DONE IN ".($time_end_analyzing-$time_end_reading_file).' SECONDS'.PHP_EOL;
 echo "------".PHP_EOL;
-echo "Powered by Project SinriSSA, provided by Sinri Edogawa under GPLv2 License";
+echo "Powered by Project SinriSSA [http://github.everstray.com/SinriSSA/], provided by Sinri Edogawa under GPLv2 License";
 
 // FUNCTIONS
 
