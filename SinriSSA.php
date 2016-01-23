@@ -17,13 +17,16 @@
  *  -t the number of sqls to be displayed by order after sorting, 10 for default, 0 for all
  *  -v sql average time range filter, such as `50,10000`, used as [50,10000)
  */
+
+echo "SINRI Slow Sql log Analyzer Version Bet [ב]".PHP_EOL;
+echo "All Hail Sinri Edogawa! In God We Trust!".PHP_EOL;
+ 
 $opt=getopt('heEs:t:f:v:');
 // print_r($opt);die();
 if(empty($opt)){
 	$opt=array('h'=>true);
 }
 if(isset($opt['h'])){
-	echo "SINRI Slow Sql log Analyzer Version Aleph [א]".PHP_EOL;
 	echo " *  # USAGE
  *  php SinriSSA.php [-eE] [-s SORT=ave_time][-v MIN,MAX] [-t TOP=10] -f FILE
  *  -e show one sample sql
@@ -210,6 +213,8 @@ foreach ($type_group as $no => $item) {
 echo PHP_EOL;
 
 echo "ANALYZE DONE IN ".($time_end_analyzing-$time_end_reading_file).' SECONDS'.PHP_EOL;
+echo "------".PHP_EOL;
+echo "Powered by Project SinriSSA, provided by Sinri Edogawa under GPLv2 License";
 
 // FUNCTIONS
 
