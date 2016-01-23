@@ -221,7 +221,7 @@ function normalizeSQL($sql){
 		$sql=preg_replace("/ *@ */", ' @ ', $sql);
 	}
 	elseif($normalizer_version==2){
-		$sql=preg_replace('/(?<=[\s\=\(])(\d+)(?=[\s,;\)])/', '@', $sql);
+		$sql=preg_replace('/(?<=[\s\=\(\<\>])(\d+)(?=[\s,;\)\<\>\!])/', '@', $sql);
 		$sql=preg_replace('/\'(([^\\\']|(\\.))*)\'/', '#', $sql);
 		$sql=preg_replace('/\([\s,#@]+\)/', '(~)', $sql);
 	}
