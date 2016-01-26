@@ -33,3 +33,11 @@ The above command would be executed as following:
 1. filter the group according the range setting;
 1. sort according to the settings, and filter the tail;
 1. display the result.
+
+## Thinking
+
+1. SQL is a `structured` query language, so that we could find that there are often sqls only parameters differ.
+2. In SQL, parameters are of two type, numbers and strings.
+3. Also there is one special form, The IN Operator.
+4. If we turn the above into certain symbols, we could make out the structure of one sql.
+5. Then we can use the sought structures of SQLs to group them!
