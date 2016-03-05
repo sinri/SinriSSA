@@ -82,6 +82,7 @@ $index=-1;
 $sql="";
 $time=0;
 $who="";
+$happened_time='';
 
 $handle = @fopen($file, "r");
 if ($handle) {
@@ -90,7 +91,8 @@ if ($handle) {
         if(strstr($line, '# Time:')!==false){
 			//echo "HERE TIME".PHP_EOL;
 			//# Time: 150803  6:07:06
-			saveit($slow,$index,$sql,$who,$time,$min,$max);
+			saveit($slow,$index,$sql,$who,$time,$min,$max,$happened_time);
+			$happened_time=$line;
 			$index+=1;
 			$sql="";
 			$time=0;
@@ -118,7 +120,7 @@ if ($handle) {
     fclose($handle);
 }
 
-saveit($slow,$index,$sql,$who,$time,$min,$max);
+saveit($slow,$index,$sql,$who,$time,$min,$max,$happened_time);
 
 $time_end_reading_file=microtime(true);
 
@@ -154,6 +156,7 @@ foreach ($slow as $item) {
 			$type_group[$type_md5]['max_time']=$time;
 		}
 		$type_group[$type_md5]['who'][$who]=$who;
+		$type_group[$type_md5]['happened_time'][]=$item['happened_time'];
 	}else{
 		$type_group[$type_md5]=array(
 			'time_sum'=>$time,
@@ -164,6 +167,7 @@ foreach ($slow as $item) {
 			'min_time'=>$time,
 			'max_time'=>$time,
 			'who'=>array($who=>$who),
+			'happened_time'=>array($item['happened_time']),
 		);
 	}
 }
@@ -190,6 +194,7 @@ foreach ($type_group as $no => $item) {
 		echo "MIN TIME: ".$item['min_time']." s; MAX TIME: ".$item['max_time']." s;";
 		echo "FREQUENCY: ".$item['freq_sum'].PHP_EOL;
 		echo "CALLED BY: ".PHP_EOL.implode(PHP_EOL, $item['who']).PHP_EOL;
+		echo "Happened Time: ".PHP_EOL.implode(PHP_EOL, $item['happened_time']).PHP_EOL;
 		echo "NORMALIZED SQL: ".PHP_EOL;
 		echo $item['sql'].PHP_EOL;
 		if(isset($opt['e'])){
@@ -240,12 +245,19 @@ function normalizeSQL($sql){
 	return $sql;
 }
 
-function saveit(&$array,$index,$sql,$who,$time,$min=100,$max=10000){
+function saveit(&$array,$index,$sql,$who,$time,$min=100,$max=10000,$happened_time='unknown'){
 	if($index>=0){
 		//if existed
 		if($time>=$min && $time<$max){
 			$n_sql=normalizeSQL($sql);
-			$array[]=array('time'=>$time,'sql'=>$sql,'n_sql'=>$n_sql,'type_md5'=>md5($n_sql),'who'=>$who);
+			$array[]=array(
+				'time'=>$time,
+				'sql'=>$sql,
+				'n_sql'=>$n_sql,
+				'type_md5'=>md5($n_sql),
+				'who'=>$who,
+				'happened_time'=>$happened_time
+			);
 		}
 	}
 }
