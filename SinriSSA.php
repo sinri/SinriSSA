@@ -18,6 +18,8 @@
  *  -v sql average time range filter, such as `50,10000`, used as [50,10000)
  */
 
+require_once __DIR__ . '/SlowSqlAnalyzer.php';
+
 echo "SINRI Slow Sql log Analyzer Version Bet [ב]".PHP_EOL;
 echo "All Hail Sinri Edogawa! In God We Trust!".PHP_EOL;
  
@@ -224,7 +226,7 @@ echo "Powered by Project SinriSSA [http://github.everstray.com/SinriSSA/], provi
 // FUNCTIONS
 
 function normalizeSQL($sql){
-	$normalizer_version=2;
+    $normalizer_version = 3;
 	// Normalizer Verion I: deprecated for Segmentation Fault Issue
 	if($normalizer_version==1){
 		$sql=preg_replace("/= *\d+ *;/", '=@;', $sql);
@@ -241,7 +243,9 @@ function normalizeSQL($sql){
 		$sql=preg_replace('/(?<=[\s\=\(\<\>,])(\d+(\.\d+)?)(?=[\s,;\)\<\>\!])/', '@', $sql);
 		$sql=preg_replace('/\'(([^\\\']|(\\.))*)\'/', '#', $sql);
 		$sql=preg_replace('/\([\s,#@]+\)/', '(~)', $sql);
-	}
+	} elseif ($normalizer_version == 3) {
+        $sql = \sinri\SinriSSA\SlowSqlAnalyzer::normalizeSQL($sql);
+    }
 	return $sql;
 }
 
